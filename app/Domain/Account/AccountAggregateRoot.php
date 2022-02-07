@@ -9,22 +9,35 @@ use App\Domain\Account\Events\MoneyAdded;
 use App\Domain\Account\Events\MoneySubtracted;
 use App\Domain\Account\Events\MoreMoneyNeeded;
 use App\Domain\Account\Exceptions\CouldNotSubtractMoney;
-use Spatie\EventSourcing\AggregateRoots\AggregateRoot;
+use EventSauce\EventSourcing\AggregateRoot;
+use EventSauce\EventSourcing\AggregateRootBehaviour;
+use Illuminate\Support\Str;
 
-class AccountAggregateRoot extends AggregateRoot
+class AccountAggregateRoot implements AggregateRoot
 {
+    use AggregateRootBehaviour;
+
     protected int $balance = 0;
 
     protected int $accountLimit = -5000;
 
     protected int $accountLimitHitInARow = 0;
 
-    public function createAccount(string $name, string $userId)
+    public static function initiate(AccountId $id): self
+    {
+        $account = new static($id);
+
+        return $account;
+    }
+
+    public function createAccount(string $name, string $userId): self
     {
         $this->recordThat(new AccountCreated($name, $userId));
 
         return $this;
     }
+
+    private function applyAccountCreated(AccountCreated $event) {}
 
     public function addMoney(int $amount)
     {
@@ -49,7 +62,7 @@ class AccountAggregateRoot extends AggregateRoot
                 $this->recordThat(new MoreMoneyNeeded());
             }
 
-            $this->persist();
+            // $this->persist();
 
             throw CouldNotSubtractMoney::notEnoughFunds($amount);
         }

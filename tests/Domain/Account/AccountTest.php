@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests;
+namespace Tests\Domain\Account;
 
 use App\Domain\Account\AccountAggregateRoot;
 use App\Domain\Account\Events\AccountCreated;
@@ -10,11 +10,12 @@ use App\Domain\Account\Events\MoneyAdded;
 use App\Domain\Account\Events\MoneySubtracted;
 use App\Domain\Account\Events\MoreMoneyNeeded;
 use App\Domain\Account\Exceptions\CouldNotSubtractMoney;
+use App\Models\Account;
 use App\Models\User;
 use Carbon\Carbon;
 use Tests\TestCase;
 
-class AccountAggregateRootTest extends TestCase
+class AccountTest extends AccountTestCase
 {
     private const ACCOUNT_UUID = 'accounts-uuid';
 
@@ -23,14 +24,11 @@ class AccountAggregateRootTest extends TestCase
     /** @test */
     public function can_create(): void
     {
-        AccountAggregateRoot::fake(self::ACCOUNT_UUID)
-            ->given([])
-            ->when(function (AccountAggregateRoot $accountAggregateRoot): void {
-                $accountAggregateRoot->createAccount(self::ACCOUNT_NAME, $this->user->id);
+        $this
+            ->when(function (AccountAggregateRoot $account) {
+                $account->createAccount('Craig', '123');
             })
-            ->assertRecorded([
-                new AccountCreated(self::ACCOUNT_NAME, $this->user->id)
-            ]);
+            ->then(new AccountCreated('Craig', '123'));
     }
 
     /** @test */
