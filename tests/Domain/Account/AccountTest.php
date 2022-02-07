@@ -60,7 +60,7 @@ class AccountTest extends AccountTestCase
             ->then(
                 new MoneySubtracted(10),
             );
-            // @todo how to test this?!
+            // EventSauce does exact matching, so if below was raised it would fail
             // ->assertNotRecorded(AccountLimitHit::class);
     }
 
@@ -80,9 +80,8 @@ class AccountTest extends AccountTestCase
             )
             ->then(
                 new AccountLimitHit()
-            )
-            ;
-            // @todo how to test this?!
+            );
+            // EventSauce does exact matching, so if below was raised it would fail
             // ->assertNotRecorded(MoneySubtracted::class);
 
     }
