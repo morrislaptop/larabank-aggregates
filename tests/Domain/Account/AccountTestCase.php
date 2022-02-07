@@ -25,8 +25,11 @@ abstract class AccountTestCase extends AggregateRootTestCase
         /** @var AccountAggregateRoot */
         $account = $this->retrieveAggregateRoot($this->aggregateRootId());
 
-        $callback($account);
-
-        $this->persistAggregateRoot($account);
+        try {
+            $callback($account);
+        }
+        finally {
+            $this->persistAggregateRoot($account);
+        }
     }
 }

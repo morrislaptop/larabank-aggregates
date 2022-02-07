@@ -3,6 +3,7 @@
 namespace Tests\Domain\Account\Projectors;
 
 use App\Domain\Account\AccountAggregateRoot;
+use App\Domain\Account\AccountId;
 use App\Models\TransactionCount;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -22,9 +23,9 @@ class TransactionCountProjectorTest extends TestCase
 
         $this->assertEquals(0, $transactionCount->count);
 
-        AccountAggregateRoot::retrieve($this->account->uuid)
-            ->addMoney(10)
-            ->persist();
+        $account = $this->repo->retrieve(AccountId::fromString($this->account->uuid));
+        $account->addMoney(10);
+        $this->repo->persist($account);
 
         $transactionCount->refresh();
 

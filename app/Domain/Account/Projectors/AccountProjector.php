@@ -7,39 +7,41 @@ use App\Domain\Account\Events\AccountCreated;
 use App\Domain\Account\Events\AccountDeleted;
 use App\Domain\Account\Events\MoneyAdded;
 use App\Domain\Account\Events\MoneySubtracted;
+use EventSauce\EventSourcing\Message;
+use EventSauce\LaravelEventSauce\Consumer;
 use Spatie\EventSourcing\EventHandlers\Projectors\Projector;
 
-class AccountProjector extends Projector
+class AccountProjector extends Consumer
 {
-    public function onAccountCreated(AccountCreated $event)
+    public function handleAccountCreated(AccountCreated $event, Message $message)
     {
         Account::create([
-            'uuid' => $event->aggregateRootUuid(),
+            'uuid' => $message->aggregateRootId()->toString(),
             'name' => $event->name,
             'user_id' => $event->userId,
         ]);
     }
 
-    public function onMoneyAdded(MoneyAdded $event)
+    public function handleMoneyAdded(MoneyAdded $event, Message $message)
     {
-        $account = Account::uuid($event->aggregateRootUuid());
+        $account = Account::uuid($message->aggregateRootId()->toString());
 
         $account->balance += $event->amount;
 
         $account->save();
     }
 
-    public function onMoneySubtracted(MoneySubtracted $event)
+    public function handleMoneySubtracted(MoneySubtracted $event, Message $message)
     {
-        $account = Account::uuid($event->aggregateRootUuid());
+        $account = Account::uuid($message->aggregateRootId()->toString());
 
         $account->balance -= $event->amount;
 
         $account->save();
     }
 
-    public function onAccountDeleted(AccountDeleted $event)
+    public function handleAccountDeleted(AccountDeleted $event, Message $message)
     {
-        Account::uuid($event->aggregateRootUuid())->delete();
+        Account::uuid($message->aggregateRootId()->toString())->delete();
     }
 }

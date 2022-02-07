@@ -3,6 +3,7 @@
 namespace Tests\Domain\Account\Reactors;
 
 use App\Domain\Account\AccountAggregateRoot;
+use App\Domain\Account\AccountId;
 use App\Domain\Account\Exceptions\CouldNotSubtractMoney;
 use App\Mail\LoanProposalMail;
 use Illuminate\Support\Facades\Mail;
@@ -15,10 +16,9 @@ class OfferLoanReactorTest extends TestCase
     {
         Mail::fake();
 
-        $aggregate = AccountAggregateRoot::retrieve($this->account->uuid);
+        $aggregate = $this->repo->retrieve(AccountId::fromString($this->account->uuid));
 
         $aggregate->subtractMoney(5000);
-        $aggregate->persist();
 
         $this->assertExceptionThrown(function () use ($aggregate){
             $aggregate->subtractMoney(1);
@@ -33,6 +33,8 @@ class OfferLoanReactorTest extends TestCase
         $this->assertExceptionThrown(function () use ($aggregate){
             $aggregate->subtractMoney(1);
         }, CouldNotSubtractMoney::class);
+
+        $this->repo->persist($aggregate);
 
         Mail::assertSent(function (LoanProposalMail $mail) {
             return $mail->hasTo($this->user->email);

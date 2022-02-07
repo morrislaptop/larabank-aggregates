@@ -7,30 +7,32 @@ use App\Domain\Account\Events\AccountDeleted;
 use App\Domain\Account\Events\MoneyAdded;
 use App\Domain\Account\Events\MoneySubtracted;
 use App\Models\TransactionCount;
+use EventSauce\EventSourcing\Message;
+use EventSauce\LaravelEventSauce\Consumer;
 use Spatie\EventSourcing\EventHandlers\Projectors\Projector;
 
-class TransactionCountProjector extends Projector
+class TransactionCountProjector extends Consumer
 {
-    public function onAccountCreated(AccountCreated $event)
+    public function handleAccountCreated(AccountCreated $event, Message $message)
     {
         TransactionCount::create([
-            'uuid' => $event->aggregateRootUuid(),
+            'uuid' => $message->aggregateRootId()->toString(),
             'user_id' => $event->userId,
         ]);
     }
 
-    public function onMoneyAdded(MoneyAdded $event)
+    public function handleMoneyAdded(MoneyAdded $event, Message $message)
     {
-        TransactionCount::uuid($event->aggregateRootUuid())->incrementCount();
+        TransactionCount::uuid($message->aggregateRootId()->toString())->incrementCount();
     }
 
-    public function onMoneySubtracted(MoneySubtracted $event)
+    public function handleMoneySubtracted(MoneySubtracted $event, Message $message)
     {
-        TransactionCount::uuid($event->aggregateRootUuid())->incrementCount();
+        TransactionCount::uuid($message->aggregateRootId()->toString())->incrementCount();
     }
 
-    public function onAccountDeleted(AccountDeleted $event)
+    public function handleAccountDeleted(AccountDeleted $event, Message $message)
     {
-        TransactionCount::uuid($event->aggregateRootUuid())->delete();
+        TransactionCount::uuid($message->aggregateRootId()->toString())->delete();
     }
 }

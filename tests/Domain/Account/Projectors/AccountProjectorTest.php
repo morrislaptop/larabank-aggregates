@@ -3,6 +3,7 @@
 namespace Tests\Domain\Account\Projectors;
 
 use App\Domain\Account\AccountAggregateRoot;
+use App\Domain\Account\AccountId;
 use App\Models\Account;
 use Tests\TestCase;
 
@@ -24,9 +25,9 @@ class AccountProjectorTest extends TestCase
     {
         $this->assertEquals(0, $this->account->balance);
 
-        AccountAggregateRoot::retrieve($this->account->uuid)
-            ->addMoney(10)
-            ->persist();
+        $account = $this->repo->retrieve(AccountId::fromString($this->account->uuid));
+        $account->addMoney(10);
+        $this->repo->persist($account);
 
         $this->account->refresh();
 
@@ -38,9 +39,9 @@ class AccountProjectorTest extends TestCase
     {
         $this->assertEquals(0, $this->account->balance);
 
-        $aggregateRoot = AccountAggregateRoot::retrieve($this->account->uuid);
-        $aggregateRoot->subtractMoney(10);
-        $aggregateRoot->persist();
+        $account = $this->repo->retrieve(AccountId::fromString($this->account->uuid));
+        $account->subtractMoney(10);
+        $this->repo->persist($account);
 
         $this->account->refresh();
 
@@ -50,9 +51,9 @@ class AccountProjectorTest extends TestCase
     /** @test */
     public function test_delete_account(): void
     {
-        AccountAggregateRoot::retrieve($this->account->uuid)
-            ->deleteAccount()
-            ->persist();
+        $account = $this->repo->retrieve(AccountId::fromString($this->account->uuid));
+        $account->deleteAccount();
+        $this->repo->persist($account);
 
         $this->assertDatabaseMissing((new Account())->getTable(), [
             'user_id' => $this->user->id,

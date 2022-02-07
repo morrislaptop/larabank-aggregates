@@ -3,6 +3,8 @@
 namespace Tests;
 
 use App\Domain\Account\AccountAggregateRoot;
+use App\Domain\Account\AccountId;
+use App\Domain\Account\AccountRepository;
 use App\Models\Account;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,11 +21,15 @@ abstract class TestCase extends BaseTestCase
 
     protected Account $account;
 
+    protected AccountRepository $repo;
+
     public function setUp(): void
     {
         parent::setUp();
 
         $this->user = User::factory()->create();
+
+        $this->repo = app(AccountRepository::class);
 
         $this->account = $this->createAccount();
     }
@@ -46,10 +52,10 @@ abstract class TestCase extends BaseTestCase
     {
         $uuid = Str::uuid();
 
-        $aggregate = AccountAggregateRoot::retrieve($uuid)
-            ->createAccount('account', $this->user->id)
-            ->persist();
+        $aggregate = $this->repo->retrieve(AccountId::fromString($uuid));
+        $aggregate->createAccount('account', $this->user->id);
+        $this->repo->persist($aggregate);
 
-        return Account::uuid($aggregate->uuid());
+        return Account::uuid($aggregate->aggregateRootId()->toString());
     }
 }

@@ -38,6 +38,8 @@ class AccountAggregateRoot implements AggregateRoot
     }
 
     private function applyAccountCreated(AccountCreated $event) {}
+    private function applyMoreMoneyNeeded(MoreMoneyNeeded $event) {}
+    private function applyAccountDeleted(AccountDeleted $event) {}
 
     public function addMoney(int $amount)
     {
@@ -61,8 +63,6 @@ class AccountAggregateRoot implements AggregateRoot
             if ($this->needsMoreMoney()) {
                 $this->recordThat(new MoreMoneyNeeded());
             }
-
-            // $this->persist();
 
             throw CouldNotSubtractMoney::notEnoughFunds($amount);
         }
