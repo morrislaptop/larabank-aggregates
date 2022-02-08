@@ -9,10 +9,17 @@ use App\Domain\Account\Projectors\AccountProjector;
 use App\Models\Account;
 use EventSauce\EventSourcing\Header;
 use EventSauce\EventSourcing\Message;
+use EventSauce\EventSourcing\TestUtilities\MessageConsumerTestCase;
+use Tests\Domain\Account\AccountMessageTestCase;
+use Tests\Support\LaravelMessageConsumerTestCase;
 use Tests\TestCase;
 
-class AccountProjectorTest extends TestCase
+class AccountProjectorTest extends LaravelMessageConsumerTestCase
 {
+    public function messageConsumer(): AccountProjector {
+        return new AccountProjector();
+    }
+
     /** @test */
     public function test_create(): void
     {
@@ -43,16 +50,18 @@ class AccountProjectorTest extends TestCase
     {
         $this->assertEquals(0, $this->account->balance);
 
-        $event = new MoneyAdded(10);
-        $message = new Message($event, [
-            Header::AGGREGATE_ROOT_ID => AccountId::fromString($this->account->uuid),
-        ]);
-        $projector = new AccountProjector();
-        $projector->handleMoneyAdded($event, $message);
+        $this
+            ->when(
+                new Message(new MoneyAdded(10), [
+                    Header::AGGREGATE_ROOT_ID => AccountId::fromString($this->account->uuid)
+                ])
+            )
+            ->then(function () {
+                $this->account->refresh();
 
-        $this->account->refresh();
+                $this->assertEquals(10, $this->account->balance);
+            });
 
-        $this->assertEquals(10, $this->account->balance);
     }
 
     /** @test */
